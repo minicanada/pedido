@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+
+    <title>Mercadinho</title>
+
+    <!-- Required Stylesheets -->
+    <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css"/>
+    <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css"/>
+
+    <!-- Load polyfills to support older browsers -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver"></script>
+
+    <!-- Required scripts -->
+    <script src="https://unpkg.com/vue@latest/dist/vue.min.js"></script>
+    <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
+    <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue-icons.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://underscorejs.org/underscore-min.js"></script>
+
+  </head>
+  <body>
+    <!-- Our application root element -->
+    <div id="app">
+      <b-container>
+        <b-jumbotron lead="Monte seu pedido">          
+          <template v-slot:header><h1>Mercadinho Mini Canadá</h1></template>
+        </b-jumbotron>
+
+        <div>
+            <b-form>
+                <b-card header="Selecione um produto">                                        
+                    <label>Categoria</label>
+                    <b-form-select :options="categorias" v-model="form.categoriaSelecionada" @change="onChangeCategoria()"></b-form-select >
+
+                    <b-form-row>
+                      <label>Produto</label>
+                      <b-form-select :options="tiposProduto" v-model="form.tipoSelecionado" @change="onChangeProduto()"></b-form-select >
+                    </b-form-row>
+
+                    <b-form-row>
+                      <label>Selecione a opção desejada</label>
+                      <b-form-select :options="listaProdutos" v-model="form.produtoSelecionado" ></b-form-select>
+                    </b-form-row>
+
+                    <b-form-row v-if="listaSabor.length > 0">
+                      <label>Escolha um tipo</label>
+                      <b-form-select :options="listaSabor" v-model="form.saborSelecionado" ></b-form-select>
+                    </b-form-row>  
+
+                    <b-form-row>    
+                        <b-col>
+                            <label for="preco">Preço R$</label>
+                            <b-form-input id="preco" :disabled="true" v-model='form.produtoSelecionado.preço' disable></b-form-input>
+                        </b-col>
+                        <b-col>
+                            <label for="quantidade-sb">Quantiade</label>
+                            <b-form-spinbutton id="quantidade-sb" class="mb-2" v-model="form.quantidade" min="1" max="100"></b-form-spinbutton>
+                        </b-col>
+                        <b-col>
+                            <label for="totalitem">Total R$</label>
+                            <b-form-input id="totalitem" :disabled="true" v-model='totalItem' disable></b-form-input>
+                        </b-col>
+                        <b-button block variant="primary" v-on:click="adicionarAoCarrinho" :disabled="podeAdicionar">Adicionar à Lista de Compras</b-button>
+                    </b-form-row>
+                </b-card>
+                <b-card class="mt-3" border-variant="primary" header-bg-variant="primary" header-text-variant="white" v-if="carrinhoComItens" header="Lista de Compras">
+                  <b-table
+                    :striped="true"
+                    :small="true"
+                    :items="carrinho.itens"
+                    :fields="campos"
+                    :table-variant="tableVariant"                    
+                  >
+                  <template v-slot:cell(descricao)="row">
+                    <div class="text-left font-weight-light">
+                      <b-badge variant="secondary">{{ row.item.quantidade }}x</b-badge> {{ row.item.descricaoLista }}
+                    </div>
+                  </template>
+
+                  <template v-slot:cell(total)="row">
+                    <div class="text-right font-weight-bold">
+                      {{ row.item.total }}
+                    </div>
+                  </template>
+
+                  <template v-slot:cell(actions)="row" >
+                    <div class="text-right font-weight-light" align="center">                      
+                        <b-icon icon="trash-fill" scale="1" @click="removerItem(row.item, row.index, $event.target)" variant="danger"></b-icon>
+                    </div>
+                  </template>
+                </b-table>
+                
+                </b-card>               
+                <br>
+                <b-card bg-variant="light">
+                  <b-form-group label-cols-lg="3" label="Dados para entrega" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-group label-cols-sm="3" label="Seu Nome:" label-align-sm="right" label-for="nested-street" >
+                      <b-form-input id="nested-street" v-model="nome"></b-form-input>
+                    </b-form-group>
+                                  
+                    <b-form-group label-cols-sm="3" label="Endereço:" label-align-sm="right" label-for="nested-street" >
+                      <b-form-input id="nested-street" v-model="endereco"></b-form-input>
+                    </b-form-group>
+                    
+                    <b-form-group label-cols-sm="3" label="Ponto de referência:"  label-align-sm="right" label-for="nested-city" >
+                      <b-form-input id="nested-city" v-model="referencia"></b-form-input>
+                    </b-form-group>
+                                    
+                    <b-form-group label-cols-sm="3" label="Forma de Pagamento:" label-align-sm="right" class="mb-0">
+                      <b-form-radio-group class="pt-2" v-model="formaPagamento" :options="['Cartão', 'Dinheiro']" ></b-form-radio-group>
+                    </b-form-group>
+                  </b-form-group>                                    
+                </b-card>
+                <br><br><br><br>                
+                <b-navbar variant="success" fixed='bottom' v-if="carrinhoComItens && !validarFinalizar">
+                  <b-button block variant="success" size="lg" @click="showErro">Enviar pedido | Total R$: {{ totalCarrinho }}</b-button>
+                </b-navbar>                
+                <b-navbar variant="success" fixed='bottom' v-if="validarFinalizar">
+                  <b-button block variant="success" size="lg" @click="showMsgConfirmacao">Enviar pedido | Total R$: {{ totalCarrinho }}</b-button>
+                </b-navbar>                
+            </b-form>
+          </div>
+          
+      </b-container>
+    </div>
+
+    <!-- Start running your app -->
+    <script>
+      window.app = new Vue({
+        el: '#app',
+        data : {
+            tableVariant: "light",
+            campos: [ { key: 'descricao', label: 'Descrição do item' }, { key: 'total', label: 'Total'}, { key: 'actions', label: ''} ],
+            form : {
+                tipoSelecionado:'',
+                categoriaSelecionada:'',
+                produtoSelecionado:'',
+                saborSelecionado: '',
+                quantidade:1
+            },
+            nome:'',
+            contato:'',
+            endereco:'',
+            referencia:'',
+            formaPagamento:'',
+            carrinho: { itens:[] },
+            planilha: null,
+        },
+
+        methods:{
+          showErro() {
+            this.$bvModal.msgBoxOk('Informe todos os dados para entrega.', {
+                title: 'Erro!',
+                size: 'sm',
+                buttonSize: 'sm',
+                okVariant: 'danger',
+                headerClass: 'p-2 border-bottom-0',
+                footerClass: 'p-2 border-top-0',
+                centered: true
+              })
+          },
+
+          onChangeCategoria(event) {
+            this.form.produtoSelecionado = '';
+            this.form.tipoSelecionado = '';
+            this.form.saborSelecionado = '';
+            this.form.quantidade = 1;
+          },
+          onChangeProduto(event) {
+            this.form.produtoSelecionado = '';
+            this.form.saborSelecionado = '';
+            this.form.quantidade = 1;
+          },
+          removerItem(item, index, button) {
+            console.log(item);
+            this.carrinho.itens.splice(index, 1);            
+            localStorage.setItem('carrinho',  JSON.stringify(this.carrinho));
+          },
+          adicionarAoCarrinho : function(event) {            
+            var tipo = this.form.saborSelecionado != '' ? " - " + this.form.saborSelecionado : '';
+            this.carrinho.itens.push({
+              quantidade: this.form.quantidade, 
+              descricaoLista:  this.form.produtoSelecionado.produto + ' - ' + this.form.produtoSelecionado.descrição + tipo + ' - ' + this.form.produtoSelecionado.preço,
+              descricao: this.form.quantidade + 'x ' + this.form.tipoSelecionado + ' - ' + this.form.produtoSelecionado.descrição + tipo,
+              tipo: tipo,
+              produto: this.form.produtoSelecionado, 
+              total: this.totalItem,
+            });            
+            this.form = {
+                tipoSelecionado:'',
+                produtoSelecionado:'',
+                saborSelecionado: '',
+                categoriaSelecionada:'',
+                quantidade:1
+            }
+            localStorage.setItem('carrinho',  JSON.stringify(this.carrinho));
+          },
+          showMsgConfirmacao() {
+            this.boxTwo = ''
+            this.$bvModal.msgBoxConfirm('Deseja enviar o seu pedido agora?', {
+              title: 'Confirma',
+              size: 'sm',
+              buttonSize: 'sm',
+              okVariant: 'success',
+              okTitle: 'Sim',
+              cancelTitle: 'Cancelar',
+              footerClass: 'p-2',
+              hideHeaderClose: false,
+              centered: true
+            })
+            .then(value => {
+              if(value)
+              {
+                var reduce = '';
+                reduce += "Nome: " + this.nome + '\n';
+                reduce += "Endereço: " + this.endereco + '\n';
+                if(this.referencia != '')
+                  reduce += "Ponto de referência: " + this.referencia + '\n';
+                reduce += "Forma de pagamento: " + this.formaPagamento + '\n';
+                reduce += '\n\n\n';
+                for (let i = 0; i < this.carrinho.itens.length; i++) {
+                  const item = this.carrinho.itens[i];
+                  reduce += item.descricao + '\n';
+                  reduce += "-------------" + '\n';
+                }
+                reduce = window.encodeURIComponent(reduce);
+                reduce = "https://api.whatsapp.com/send?phone=557592027488&text=" + reduce;
+                window.open(reduce, "_self");
+              }
+              // var reduce = '';
+              // reduce += "Nome: " + this.nome + '<br>';
+              // reduce += "Endereço: " + this.endereco + '<br>';
+              // reduce += "Contato: " + this.contato + '<br>';
+              // if(this.referencia != '')
+              //   reduce += "Ponto de referência: " + this.referencia + '<br>';
+              // reduce += "Forma de pagamento: " + this.formaPagamento + '<br>';
+              // reduce += '<br><br>';
+              // for (let i = 0; i < this.carrinho.itens.length; i++) {
+              //   const item = this.carrinho.itens[i];
+              //   reduce += item.descricao + '<br>';
+              //   reduce += "-------------" + '<br>';
+              // }
+              // axios.post("https://cors-anywhere.herokuapp.com/https://maker.ifttt.com/trigger/finalizarpedido/with/key/m5nHEIvY9G1P86p4G6hd2lne0HZt8eVeYQiViL7nsge", 
+              // { Value1: reduce }).then(function (response) {
+              //   this.$bvModal.msgBoxOk('Aguarde o nosso contato no número informado.', {
+              //   title: 'Pedido Enviado!',
+              //   size: 'sm',
+              //   buttonSize: 'sm',
+              //   okVariant: 'success',
+              //   headerClass: 'p-2 border-bottom-0',
+              //   footerClass: 'p-2 border-top-0',
+              //   centered: true
+              //   });
+              // })
+              // .catch(function (error) {
+              //   console.log(error);
+              // });
+            })
+            .catch(err => {
+              // An error occurred
+            })
+          }
+        },
+
+        computed: {
+          wpplink() {
+            var reduce = '';
+            reduce += "Nome: " + this.nome + '\n';
+            reduce += "Endereço: " + this.endereco + '\n';
+            if(this.referencia != '')
+              reduce += "Ponto de referência: " + this.referencia + '\n';
+            reduce += "Forma de pagamento: " + this.formaPagamento + '\n';
+            reduce += '\n\n\n';
+            for (let i = 0; i < this.carrinho.itens.length; i++) {
+              const item = this.carrinho.itens[i];
+              reduce += item.descricao + '\n';
+              reduce += "-------------" + '\n';
+            }
+            reduce = window.encodeURIComponent(reduce);
+            return "https://api.whatsapp.com/send?phone=557592027488&text=" + reduce;
+          },
+
+          showAlert() {
+            return this.name.length > 4 ? true : false
+          },
+          categorias(){
+            return _.uniq(_.map(this.planilha, (item) => item.categoria));
+          },
+          tiposProduto() {
+              return _.uniq(_.map(_.where(this.planilha, { categoria: this.form.categoriaSelecionada }), (item) => item.produto));
+          },
+          listaProdutos() {
+              return _.map(_.where(this.planilha, { produto : this.form.tipoSelecionado }), 
+                function(x) { return { text: x.descrição + ' - R$ ' + x.preço, value: x}; });
+          },
+          listaSabor(){
+            if(this.form.produtoSelecionado != '' && typeof this.form.produtoSelecionado.tipo === "string")
+              return this.form.produtoSelecionado.tipo.split(";");
+            else
+              return [];
+          },
+          temSabor(){
+            if(this.form.produtoSelecionado != '' && typeof this.form.produtoSelecionado.tipo === "string")
+              return this.form.produtoSelecionado.tipo.split(";").length > 0;
+            else
+              return false;
+          },
+          podeAdicionar(){
+            if(this.form.produtoSelecionado != '' && typeof this.form.produtoSelecionado.tipo === "string")
+              return this.form.produtoSelecionado === '' || this.form.saborSelecionado === '';
+            return this.form.produtoSelecionado === '';
+          },
+          totalCarrinho() {
+              var totalcompra = 0;
+              for (let i = 0; i < this.carrinho.itens.length; i++) {
+                const item = this.carrinho.itens[i];
+                totalcompra += parseFloat(item.total.replace(',', '.'));
+              }
+              return totalcompra.toLocaleString('pt-br', {minimumFractionDigits: 2});
+          },
+          totalItem(){
+              var preco = this.form.produtoSelecionado ? this.form.produtoSelecionado.preço.replace(',', '.') : 0;
+              return (preco * this.form.quantidade).toLocaleString('pt-br', {minimumFractionDigits: 2});
+          },
+          carrinhoComItens() {
+            return this.carrinho.itens.length > 0;
+          },
+          validarFinalizar() {
+            return this.carrinho.itens.length > 0 && this.endereco && this.formaPagamento && this.nome;
+          }
+        },
+        
+        mounted () {
+          var id = '1QkkOPfWn9_cVkdrWCJs3d9rqIDE_7n-oPNuug-FmdD0',
+          //var id = '1Hnksz9ikcghO4DtSrTq_QeAIqsLPKqpI0DQC8CxYO7o',
+          sheet = 1,              
+          url = 'https://spreadsheets.google.com/feeds/list/' + id + '/' + sheet + '/public/values?alt=json';
+
+          if(localStorage.getItem('carrinho'))
+            this.carrinho = JSON.parse(localStorage.getItem('carrinho'));
+
+          axios.get(url)
+          .then(response => {
+            var showRows = true, 
+            showColumns = false,
+            query = '',
+            useIntegers = true;
+            var data = response.data;
+            var responseObj = {};
+            var rows = [];
+            var columns = {};
+            if (data && data.feed && data.feed.entry) {
+              for (var i = 0; i < data.feed.entry.length; i++) {
+                var entry = data.feed.entry[i];
+                var keys = Object.keys(entry);
+                var newRow = {};
+                var queried = false;
+                for (var j = 0; j < keys.length; j++) {
+                  var gsxCheck = keys[j].indexOf('gsx$');
+                  if (gsxCheck > -1) {
+                    var key = keys[j];
+                    var name = key.substring(4);
+                    var content = entry[key];
+                    var value = content.$t;
+                    if (value.toLowerCase().indexOf(query.toLowerCase()) > -1) {
+                      queried = true;
+                    }
+                    if (useIntegers === true && !isNaN(value)) {
+                      value = Number(value);
+                    }
+                    newRow[name] = value;
+                    if (queried === true) {
+                      if (!columns.hasOwnProperty(name)) {
+                        columns[name] = [];
+                        columns[name].push(value);
+                      } else {
+                        columns[name].push(value);
+                      }
+                    }
+                  }
+                }
+                if (queried === true) {
+                  rows.push(newRow);
+                }
+              }
+              if (showColumns === true) {
+                responseObj['columns'] = columns;
+              }
+              if (showRows === true) {
+                responseObj['rows'] = rows;
+              }                
+              //final do gsx2json
+              
+              this.planilha = responseObj.rows;
+              for (let i = 0; i < this.planilha.length; i++) {
+                  const item = this.planilha[i];
+                  item.preço = parseFloat(item.preço.replace(',', '.')).toLocaleString('pt-br', {minimumFractionDigits: 2});
+              }
+            }
+          });            
+        }
+      })
+    </script>
+  </body>
+</html>
