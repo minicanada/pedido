@@ -190,13 +190,10 @@
               produto: this.form.produtoSelecionado, 
               total: this.totalItem,
             });            
-            this.form = {
-                tipoSelecionado:'',
-                produtoSelecionado:'',
-                saborSelecionado: '',
-                categoriaSelecionada:'',
-                quantidade:1
-            }
+            this.form.tipoSelecionado = '';
+            this.form.produtoSelecionado = '';
+            this.form.saborSelecionado = '';
+            this.form.quantidade = 1;
             localStorage.setItem('carrinho',  JSON.stringify(this.carrinho));
           },
           showMsgConfirmacao() {
@@ -231,34 +228,6 @@
                 reduce = "https://api.whatsapp.com/send?phone=557592027488&text=" + reduce;
                 window.open(reduce, "_self");
               }
-              // var reduce = '';
-              // reduce += "Nome: " + this.nome + '<br>';
-              // reduce += "Endereço: " + this.endereco + '<br>';
-              // reduce += "Contato: " + this.contato + '<br>';
-              // if(this.referencia != '')
-              //   reduce += "Ponto de referência: " + this.referencia + '<br>';
-              // reduce += "Forma de pagamento: " + this.formaPagamento + '<br>';
-              // reduce += '<br><br>';
-              // for (let i = 0; i < this.carrinho.itens.length; i++) {
-              //   const item = this.carrinho.itens[i];
-              //   reduce += item.descricao + '<br>';
-              //   reduce += "-------------" + '<br>';
-              // }
-              // axios.post("https://cors-anywhere.herokuapp.com/https://maker.ifttt.com/trigger/finalizarpedido/with/key/m5nHEIvY9G1P86p4G6hd2lne0HZt8eVeYQiViL7nsge", 
-              // { Value1: reduce }).then(function (response) {
-              //   this.$bvModal.msgBoxOk('Aguarde o nosso contato no número informado.', {
-              //   title: 'Pedido Enviado!',
-              //   size: 'sm',
-              //   buttonSize: 'sm',
-              //   okVariant: 'success',
-              //   headerClass: 'p-2 border-bottom-0',
-              //   footerClass: 'p-2 border-top-0',
-              //   centered: true
-              //   });
-              // })
-              // .catch(function (error) {
-              //   console.log(error);
-              // });
             })
             .catch(err => {
               // An error occurred
@@ -267,23 +236,6 @@
         },
 
         computed: {
-          wpplink() {
-            var reduce = '';
-            reduce += "Nome: " + this.nome + '\n';
-            reduce += "Endereço: " + this.endereco + '\n';
-            if(this.referencia != '')
-              reduce += "Ponto de referência: " + this.referencia + '\n';
-            reduce += "Forma de pagamento: " + this.formaPagamento + '\n';
-            reduce += '\n\n\n';
-            for (let i = 0; i < this.carrinho.itens.length; i++) {
-              const item = this.carrinho.itens[i];
-              reduce += item.descricao + '\n';
-              reduce += "-------------" + '\n';
-            }
-            reduce = window.encodeURIComponent(reduce);
-            return "https://api.whatsapp.com/send?phone=557592027488&text=" + reduce;
-          },
-
           showAlert() {
             return this.name.length > 4 ? true : false
           },
