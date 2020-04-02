@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 
-    <title>Mercado Mini Canadá</title>
+    <title>Mercado mini Canadá</title>
 
     <!-- Required Stylesheets -->
     <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css"/>
@@ -26,8 +26,12 @@
   <body>
     <div id="app">
       <b-container>
-        <b-jumbotron lead="Monte seu pedido">          
-          <template v-slot:header><h1>Mercado Mini Canadá</h1></template>
+        <b-jumbotron>          
+          <template v-slot:header>
+            <div>
+              <b-img center src="logo.png" style="width:100%; max-width: 300px;">
+            </div>
+          </template>
         </b-jumbotron>
 
         <div>
@@ -98,6 +102,10 @@
                 <br>
                 <b-card bg-variant="light">
                   <b-form-group label-cols-lg="3" label="Dados para entrega" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
+                    <b-form-group label-cols-sm="3" label-align-sm="right" class="mb-0">
+                      <b-form-radio-group class="pt-2" v-model="formaEntrega" :options="['Entregar em sua casa', 'Retirar na loja']" ></b-form-radio-group>
+                    </b-form-group>
+
                     <b-form-group label-cols-sm="3" label="Seu Nome:" label-align-sm="right" label-for="nested-street" >
                       <b-form-input id="nested-street" v-model="nome"></b-form-input>
                     </b-form-group>
@@ -147,6 +155,7 @@
             endereco:'',
             referencia:'',
             formaPagamento:'',
+            formaEntrega:'',
             carrinho: { itens:[] },
             planilha: null,
         },
@@ -352,6 +361,7 @@
                   const item = this.planilha[i];
                   item.preço = parseFloat(item.preço.replace(',', '.')).toLocaleString('pt-br', {minimumFractionDigits: 2});
               }
+              this.planilha = _.where(this.planilha, { estoque : 1 });
             }
           });            
         }
