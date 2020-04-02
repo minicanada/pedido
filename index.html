@@ -102,10 +102,6 @@
                 <br>
                 <b-card bg-variant="light">
                   <b-form-group label-cols-lg="3" label="Dados para entrega" label-size="lg" label-class="font-weight-bold pt-0" class="mb-0" >
-                    <b-form-group label-cols-sm="3" label-align-sm="right" class="mb-0">
-                      <b-form-radio-group class="pt-2" v-model="formaEntrega" :options="['Entregar em sua casa', 'Retirar na loja']" ></b-form-radio-group>
-                    </b-form-group>
-
                     <b-form-group label-cols-sm="3" label="Seu Nome:" label-align-sm="right" label-for="nested-street" >
                       <b-form-input id="nested-street" v-model="nome"></b-form-input>
                     </b-form-group>
@@ -234,7 +230,7 @@
                   reduce += "-------------" + '\n';
                 }
                 reduce = window.encodeURIComponent(reduce);
-                reduce = "https://api.whatsapp.com/send?phone=557592027488&text=" + reduce;
+                reduce = "https://api.whatsapp.com/send?phone=5575991147654&text=" + reduce;
                 window.open(reduce, "_self");
               }
             })
